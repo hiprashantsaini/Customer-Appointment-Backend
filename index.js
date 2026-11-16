@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const connectDB = require("./db");
 require("dotenv").config();
 
 
@@ -16,12 +17,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Connected Successfully"))
-    .catch((error) => console.log("MongoDB Error:", error));
-
-
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    res.status(503).json({ success: false, message: "Database connection unavailable" });
+  }
+});
 app.use("/api/appointments", require("./routes/appointmentRoutes"));
 
 // Server
